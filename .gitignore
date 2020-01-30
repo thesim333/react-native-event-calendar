@@ -1,6 +1,7 @@
 # VSCode
 .vscode/
 jsconfig.json
+.history
 
 # IntelliJ/Webstorm
 .idea

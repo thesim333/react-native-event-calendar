@@ -1,9 +1,10 @@
 // @flow
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import populateEvents from './Packer';
-import React from 'react';
+import React, { PureComponent } from 'react';
 import moment from 'moment';
 import _ from 'lodash';
+import memoize from 'memoize-one';
 
 const LEFT_MARGIN = 60 - 1;
 // const RIGHT_MARGIN = 10
@@ -17,27 +18,26 @@ function range(from, to) {
   return Array.from(Array(to), (_, i) => from + i);
 }
 
-export default class DayView extends React.PureComponent {
+export default class DayView extends PureComponent {
   constructor(props) {
     super(props);
-    this.calendarHeight = (props.end - props.start) * 100;
+    const calendarHeight = (props.end - props.start) * 100;
     const width = props.width - LEFT_MARGIN;
-    const packedEvents = populateEvents(props.events, width, props.start);
+    
+    this.packedEvents = memoize(
+      (events, width, start) => populateEvents(events, width - LEFT_MARGIN, start)
+    );
+    
     let initPosition =
       _.min(_.map(packedEvents, 'top')) -
-      this.calendarHeight / (props.end - props.start);
+      calendarHeight / (props.end - props.start);
+    
     initPosition = initPosition < 0 ? 0 : initPosition;
+    
     this.state = {
       _scrollY: initPosition,
-      packedEvents,
+      height: calendarHeight
     };
-  }
-
-  componentWillReceiveProps(nextProps) {
-    const width = nextProps.width - LEFT_MARGIN;
-    this.setState({
-      packedEvents: populateEvents(nextProps.events, width, nextProps.start),
-    });
   }
 
   componentDidMount() {
@@ -80,7 +80,7 @@ export default class DayView extends React.PureComponent {
 
   _renderLines() {
     const { format24h, start, end } = this.props;
-    const offset = this.calendarHeight / (end - start);
+    const offset = this.state.height / (end - start);
 
     return range(start, end + 1).map((i, index) => {
       let timeText;
@@ -122,7 +122,7 @@ export default class DayView extends React.PureComponent {
 
   _renderTimeLabels() {
     const { styles, start, end } = this.props;
-    const offset = this.calendarHeight / (end - start);
+    const offset = this.state.height / (end - start);
     return range(start, end).map((item, i) => {
       return (
         <View key={`line${i}`} style={[styles.line, { top: offset * i }]} />
@@ -135,9 +135,10 @@ export default class DayView extends React.PureComponent {
   }
 
   _renderEvents() {
-    const { styles } = this.props;
-    const { packedEvents } = this.state;
-    let events = packedEvents.map((event, i) => {
+    const { styles, events, width, start } = this.props;
+    
+    const events = this.packedEvents(events, width, start)
+    .map((event, i) => {
       const style = {
         left: event.left,
         height: event.height,
