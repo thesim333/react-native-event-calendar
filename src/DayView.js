@@ -137,7 +137,7 @@ export default class DayView extends PureComponent {
   _renderEvents() {
     const { styles, events, width, start } = this.props;
     
-    const events = this.packedEvents(events, width, start)
+    const eventComponents = this.packedEvents(events, width, start)
     .map((event, i) => {
       const style = {
         left: event.left,
