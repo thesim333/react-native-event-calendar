@@ -27,9 +27,10 @@ export default class DayView extends PureComponent {
     this.packedEvents = memoize(
       (events, width, start) => populateEvents(events, width - LEFT_MARGIN, start)
     );
+    const events = this.packedEvents(props.events, width, props.start);
     
     let initPosition =
-      _.min(_.map(packedEvents, 'top')) -
+      _.min(_.map(events, 'top')) -
       calendarHeight / (props.end - props.start);
     
     initPosition = initPosition < 0 ? 0 : initPosition;
@@ -137,8 +138,8 @@ export default class DayView extends PureComponent {
   _renderEvents() {
     const { styles, events, width, start } = this.props;
     
-    const eventComponents = this.packedEvents(events, width, start)
-    .map((event, i) => {
+    const packed = this.packedEvents(events, width, start)
+    const eventComponents = packed.map((event, i) => {
       const style = {
         left: event.left,
         height: event.height,
@@ -191,7 +192,7 @@ export default class DayView extends PureComponent {
 
     return (
       <View>
-        <View style={{ marginLeft: LEFT_MARGIN }}>{events}</View>
+        <View style={{ marginLeft: LEFT_MARGIN }}>{eventComponents}</View>
       </View>
     );
   }

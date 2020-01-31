@@ -9,19 +9,16 @@ import {
 import _ from 'lodash';
 import moment from 'moment';
 import React from 'react';
-
 import styleConstructor from './style';
-
 import DayView from './DayView';
 
 export default class EventCalendar extends React.Component {
   constructor(props) {
     super(props);
-
     const start = props.start ? props.start : 0;
     const end = props.end ? props.end : 24;
-
     this.styles = styleConstructor(props.styles, (end - start) * 100);
+    
     this.state = {
       date: moment(this.props.initDate),
       index: this.props.size,
