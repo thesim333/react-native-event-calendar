@@ -1,5 +1,6 @@
 // @flow
 import moment from 'moment';
+import _ from 'lodash';
 const offset = 100;
 
 function buildEvent(column, left, width, dayStart) {
@@ -43,15 +44,39 @@ function expand(ev, column, columns) {
 
 function pack(columns, width, calculatedEvents, dayStart) {
   var colLength = columns.length;
+  var overlaps = [];
 
   for (var i = 0; i < colLength; i++) {
     var col = columns[i];
+    
     for (var j = 0; j < col.length; j++) {
       var colSpan = expand(col[j], i, columns);
       var L = (i / colLength) * width;
       var W = (width * colSpan) / colLength - 10;
 
+      if (_.find(overlaps, { j: j })) {
+        W = W / 2;
+        L += W;
+      } else if (findOverlap(j, col, overlaps)) {
+        W = W / 2;
+      }
+
       calculatedEvents.push(buildEvent(col[j], L, W, dayStart));
+    }
+  }
+}
+
+function findOverlap(j, col, overlaps) {
+  for (let k = j + 1; k < col.length; k++) {
+    const kStart = moment(col[k].start);
+    const kEnd = moment(col[k].end);
+    const jStart = moment(col[j].start);
+    const jEnd = moment(col[j].end);
+
+    if (!((jStart < kStart && jEnd <= kStart)
+      || (kStart < jStart && kEnd <= jStart))) {
+      overlaps.push({ j: k });
+      return true;
     }
   }
 }
